@@ -1,0 +1,141 @@
+package com.vranec.jira.gateway;
+
+import com.vranec.timesheet.generator.ReportableTask;
+import com.vranec.timesheet.generator.TaskSource;
+import lombok.extern.slf4j.Slf4j;
+import net.rcarz.jiraclient.*;
+import net.sf.json.JSON;
+import net.sf.json.JSONObject;
+
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+
+@Slf4j
+public class CustomJiraClient extends JiraClient implements TaskSource {
+
+    private Collection<ReportableTask> reportableTasks;
+    private HashMap<String, Integer> statistics;
+    private Date startDate;
+
+    CustomJiraClient(String uri, ICredentials creds) throws JiraException {
+        super(uri, creds);
+    }
+
+    public Map<String, Integer> getStatistics() {
+        return statistics;
+    }
+
+    private Issue.SearchResult searchIssues(String jql, Integer maxResults, String expand) {
+        final String j = jql;
+        JSON result;
+
+        try {
+            Map<String, String> queryParams = new HashMap<String, String>() {
+                {
+                    put("jql", j);
+                }
+            };
+            if (maxResults != null) {
+                queryParams.put("maxResults", String.valueOf(maxResults));
+            }
+            queryParams.put("fields", "summary,comment");
+            if (expand != null) {
+                queryParams.put("expand", expand);
+            }
+
+            URI searchUri = getRestClient().buildURI(Resource.getBaseUri() + "search", queryParams);
+            result = getRestClient().get(searchUri);
+        } catch (IOException ex) {
+            log.error("Cannot connect to JIRA server {}", ex.getMessage());
+            return null;
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage());
+        }
+
+        if (!(result instanceof JSONObject)) {
+            throw new IllegalStateException("JSON payload is malformed");
+        }
+log.info("JSON: {}", result);
+
+        try {
+            Issue.SearchResult sr = new Issue.SearchResult(getRestClient(), jql, "summary,comment", expand, maxResults, 0 );
+/*
+            Map map = (Map) result;
+
+            sr.start = Field.getInteger(map.get("startAt"));
+            sr.max = Field.getInteger(map.get("maxResults"));
+            sr.total = Field.getInteger(map.get("total"));
+            sr.issues = Field.getResourceArray(Issue.class, map.get("issues"), getRestClient());
+*/
+
+            return sr;
+        } catch (JiraException e) {
+            throw new IllegalStateException("JSON payload is malformed");
+        }
+    }
+
+    public Iterable<ReportableTask> getTasks(LocalDate localStartDate) {
+        startDate = Date.from(localStartDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        String jql = "updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) + "' and (watcher = "
+                + "currentUser()" + " or status changed by " + "'d.sychugov' or status changed by 'p.bogatyrev' or status changed by 'f.frolov'" + ")";
+        log.info("Searching for issues by JQL: " + jql + "...");
+        Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
+        processIssues(result);
+        return reportableTasks;
+    }
+
+    private void processIssues(Issue.SearchResult result) {
+        reportableTasks = new ArrayList<>();
+        statistics = new HashMap<String, Integer>();
+
+        if (result == null) {
+            return;
+        }
+
+        for (Issue issue : result.issues) {
+            List<WorkLog> allWorkLogs = null;
+            HashMap<String, Integer> timeMap = new HashMap<>();
+            try {
+                allWorkLogs = issue.getAllWorkLogs();
+                log.info("Issue {}", issue.getKey());
+                for (WorkLog wl : allWorkLogs) {
+                    if (!wl.getStarted().before(startDate)) {
+                        int min = wl.getTimeSpentSeconds() / 60;
+                        addTimeToIndex(timeMap, wl.getAuthor().getName(), min);
+                        log.info("* time: {} -- {}", wl.getAuthor(), (min > 60) ? ((min / 60) + " h " + (min % 60) + " m") : (min + " m"));
+                    }
+                }
+            } catch (JiraException e) {
+                log.error("No worklog at {} ", issue.getKey());
+            }
+            for (String author : timeMap.keySet()) {
+                reportableTasks.add(processIssues(issue, author, timeMap.get(author)));
+                addTimeToIndex(statistics, author, timeMap.get(author));
+            }
+        }
+    }
+
+    private static void addTimeToIndex(HashMap<String, Integer> map, String index, Integer integer) {
+        if (map.containsKey(index)) {
+            Integer time = map.get(index);
+            map.put(index, time + integer);
+        } else {
+            map.put(index, integer);
+        }
+    }
+
+    private ReportableTask processIssues(Issue issue, String author, int time) {
+        return ReportableTask.builder()
+                .key(issue.getKey())
+                .summary(issue.getSummary())
+                .resource(author)
+                .hours(time / 60)
+                .build();
+    }
+}
