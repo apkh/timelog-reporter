@@ -12,6 +12,9 @@ import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @Getter
@@ -25,6 +28,8 @@ public class ConfigurationFromPropertiesFile implements Configuration {
     private String jiraUsername;
     @Value("${jira.password:}")
     private String jiraPassword;
+    @Value("${jira.resources:}")
+    private String jiraResources;
     @Value("${month.detection.subtract.days:15}")
     private int monthDetectionSubtractDays;
     @Value("${ignore.invalid.server.certificate:false}")
@@ -45,5 +50,10 @@ public class ConfigurationFromPropertiesFile implements Configuration {
             Files.copy(getClass().getResourceAsStream("/default.properties"), configurationFile.toPath());
             log.error("Please edit the generated timesheet-generator.properties");
         }
+    }
+    
+    public List getResources() {
+    	return new ArrayList<String>(Arrays.asList(jiraResources.split(",")));
+
     }
 }

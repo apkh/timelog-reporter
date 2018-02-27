@@ -1,20 +1,33 @@
 package com.vranec.jira.gateway;
 
-import com.vranec.timesheet.generator.ReportableTask;
-import com.vranec.timesheet.generator.TaskSource;
-import lombok.extern.slf4j.Slf4j;
-import net.rcarz.jiraclient.*;
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
-
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.vranec.timesheet.generator.Configuration;
+import com.vranec.timesheet.generator.ReportableTask;
+import com.vranec.timesheet.generator.TaskSource;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import net.rcarz.jiraclient.ICredentials;
+import net.rcarz.jiraclient.Issue;
+import net.rcarz.jiraclient.JiraClient;
+import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.Resource;
+import net.rcarz.jiraclient.WorkLog;
+import net.sf.json.JSON;
+import net.sf.json.JSONObject;
 
 @Slf4j
 public class CustomJiraClient extends JiraClient implements TaskSource {
@@ -22,6 +35,12 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
     private Collection<ReportableTask> reportableTasks;
     private HashMap<String, Integer> statistics;
     private Date startDate;
+    // Date -> User -> {task, time}*
+    @Autowired
+    private WorkloadMap workloadMap; 
+    
+    @Autowired
+    private Configuration configuration;
 
     CustomJiraClient(String uri, ICredentials creds) throws JiraException {
         super(uri, creds);
@@ -82,14 +101,18 @@ log.info("JSON: {}", result);
 
     public Iterable<ReportableTask> getTasks(LocalDate localStartDate) {
         startDate = Date.from(localStartDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        String qlChangedBy = String.join("' or status changed by '", configuration.getResources());
         String jql = "updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) + "' and (watcher = "
-                + "currentUser()" + " or status changed by " + "'d.sychugov' or status changed by 'p.bogatyrev' or status changed by 'f.frolov'" + ")";
+                + "currentUser()" + " or status changed by '" + qlChangedBy + "')";
         log.info("Searching for issues by JQL: " + jql + "...");
         Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
         processIssues(result);
         return reportableTasks;
     }
 
+    /*
+     * We need to create a map <Date, Map<User, Pair<TaskKey, Float>>> 
+     */
     private void processIssues(Issue.SearchResult result) {
         reportableTasks = new ArrayList<>();
         statistics = new HashMap<String, Integer>();
@@ -108,6 +131,7 @@ log.info("JSON: {}", result);
                     if (!wl.getStarted().before(startDate)) {
                         int min = wl.getTimeSpentSeconds() / 60;
                         addTimeToIndex(timeMap, wl.getAuthor().getName(), min);
+                        workloadMap.addWl(wl.getStarted(), issue.getKey(), wl.getAuthor().getName(), min);
                         log.info("* time: {} -- {}", wl.getAuthor(), (min > 60) ? ((min / 60) + " h " + (min % 60) + " m") : (min + " m"));
                     }
                 }

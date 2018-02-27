@@ -3,7 +3,11 @@ package com.vranec.timesheet.generator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.vranec.jira.gateway.WorkloadMap;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -27,14 +31,14 @@ public class TimeSpentGenerator {
         val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
         log.info("START TIMESHEET GENERATION SINCE {}", startDate);
         Iterable<ReportableTask> tasks = taskSource.getTasks(startDate);
-        val timesheet = parseTasks(tasks, resourcesSet);
+        val timesheet = filterTasksByResourceNames(tasks, resourcesSet);
         reporter.report(timesheet, taskSource.getStatistics());
         //exporter.export(timesheet);
         log.info("TIMESHEET GENERATED SUCCESSFULLY");
     }
 
 
-    private List<ReportableTask> parseTasks(Iterable<ReportableTask> tasks, Set<String> resources) {
+    private List<ReportableTask> filterTasksByResourceNames(Iterable<ReportableTask> tasks, Set<String> resources) {
         List<ReportableTask> result = new ArrayList<>();
 
         tasks.forEach(task -> {
