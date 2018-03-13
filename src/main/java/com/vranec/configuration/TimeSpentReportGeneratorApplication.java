@@ -1,7 +1,6 @@
 package com.vranec.configuration;
 
 import com.vranec.timesheet.generator.TimeSpentGenerator;
-import com.vranec.timesheet.generator.TimesheetGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import javax.annotation.PostConstruct;
 
 /**
- * Entry point of the application. Starts {@link TimesheetGenerator} automatically (using @{@link javax.annotation.PostConstruct}.
+ * Entry point of the application. Starts {@link TimeSpentGenerator} automatically (using @{@link javax.annotation.PostConstruct}.
  */
 @SpringBootApplication
 public class TimeSpentReportGeneratorApplication {

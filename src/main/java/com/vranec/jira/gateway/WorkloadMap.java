@@ -14,7 +14,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class WorkloadMap {
+	// DayOfMonth -> (User -> (TaskKey -> hours) )
 	private Map<Integer, Map<String, Map<String, Float>>> wlMap;
+	// TaskKey -> summary
 	private Map<String, String> taskSummaryMap;
 
 	public WorkloadMap() {

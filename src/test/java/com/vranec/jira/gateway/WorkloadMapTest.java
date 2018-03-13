@@ -4,7 +4,9 @@ import static java.time.LocalDate.now;
 import static org.junit.Assert.*;
 
 import java.util.Date;
+import java.util.Map;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +25,8 @@ public class WorkloadMapTest {
 	@Test
 	public void test() {
 		wlMap.addWl(new Date(), "task", "sum", "user", 15);
-		assertEquals("", wlMap.getTasks(new Date().getDay(), "user"));
+		Map<String, Float> tasks = wlMap.getTasks(new DateTime(new Date()).getDayOfMonth(), "user");
+		assertEquals(1, tasks.size());
 	}
 
 }

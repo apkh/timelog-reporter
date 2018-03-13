@@ -14,6 +14,6 @@ public class ReportableTaskTest {
                         .minutes(42)
                         .resource("John Dow")
                         .summary("#sum#").build();
-        assertEquals("123, #sum#, 42, John Dow", task.toString());
+        assertEquals("123, #sum#, 0.7, John Dow", task.toString());
     }
 }

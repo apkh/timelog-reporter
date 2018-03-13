@@ -46,6 +46,8 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
 
     CustomJiraClient(String uri, ICredentials creds) throws JiraException {
         super(uri, creds);
+        statistics = new HashMap<String, Integer>();
+
     }
 
     public Map<String, Integer> getStatistics() {
@@ -120,7 +122,7 @@ log.info("JSON: {}", result);
      */
     private void processIssues(Issue.SearchResult result) {
         reportableTasks = new ArrayList<>();
-        statistics = new HashMap<String, Integer>();
+        statistics.clear();
 
         if (result == null) {
             return;

@@ -48,12 +48,13 @@ public class TimesheetGeneratorTest {
         return new String(Files.readAllBytes(Paths.get("export.csv")));
     }
 
-    private Iterable<Task> oneIssueFromYesterday(String... issues) throws JiraException {
+    private Iterable<ReportableTask> oneIssueFromYesterday(String... issues) throws JiraException {
         return Arrays.stream(issues)
-                .map(issueName -> Task.builder()
-                        .date(LocalDate.now().minusDays(configuration.getMonthDetectionSubtractDays()))
-                        .author(configuration.getJiraUsername().split("@")[0])
-                        .name(issueName)
+                .map(issueName -> ReportableTask.builder()
+                        //.date(LocalDate.now().minusDays(configuration.getMonthDetectionSubtractDays()))
+                        .minutes(10)
+                		.resource(configuration.getJiraUsername().split("@")[0])
+                        .summary(issueName)
                         .build())
                 .collect(toSet());
     }
