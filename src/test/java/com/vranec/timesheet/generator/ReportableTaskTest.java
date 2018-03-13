@@ -11,7 +11,7 @@ public class ReportableTaskTest {
     public void toStringTest() {
         val task = ReportableTask.builder()
                         .key("123")
-                        .hours(42)
+                        .minutes(42)
                         .resource("John Dow")
                         .summary("#sum#").build();
         assertEquals("123, #sum#, 42, John Dow", task.toString());

@@ -19,6 +19,7 @@ import com.vranec.timesheet.generator.ReportableTask;
 import com.vranec.timesheet.generator.TaskSource;
 
 import lombok.Getter;
+import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 import net.rcarz.jiraclient.ICredentials;
 import net.rcarz.jiraclient.Issue;
@@ -35,6 +36,7 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
     private Collection<ReportableTask> reportableTasks;
     private HashMap<String, Integer> statistics;
     private Date startDate;
+    private Date endDate;
     // Date -> User -> {task, time}*
     @Autowired
     private WorkloadMap workloadMap; 
@@ -99,11 +101,14 @@ log.info("JSON: {}", result);
         }
     }
 
-    public Iterable<ReportableTask> getTasks(LocalDate localStartDate) {
+    public Iterable<ReportableTask> getTasks(LocalDate localStartDate, LocalDate localEndDate) {
         startDate = Date.from(localStartDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        String qlChangedBy = String.join("' or status changed by '", configuration.getResources());
-        String jql = "updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) + "' and (watcher = "
-                + "currentUser()" + " or status changed by '" + qlChangedBy + "')";
+        endDate = Date.from(localEndDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        String qlAssignee = String.join(", ", configuration.getResources());
+        String jql = "project = LK18 AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) +
+        		//" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localEndDate) +
+        		"' and assignee in (" + 
+        		qlAssignee + ")";
         log.info("Searching for issues by JQL: " + jql + "...");
         Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
         processIssues(result);
@@ -128,10 +133,11 @@ log.info("JSON: {}", result);
                 allWorkLogs = issue.getAllWorkLogs();
                 log.info("Issue {}", issue.getKey());
                 for (WorkLog wl : allWorkLogs) {
-                    if (!wl.getStarted().before(startDate)) {
+                    if (!wl.getStarted().before(startDate) &&
+                    		!wl.getStarted().after(endDate)) {
                         int min = wl.getTimeSpentSeconds() / 60;
                         addTimeToIndex(timeMap, wl.getAuthor().getName(), min);
-                        workloadMap.addWl(wl.getStarted(), issue.getKey(), wl.getAuthor().getName(), min);
+                        workloadMap.addWl(wl.getStarted(), issue.getKey(), issue.getSummary(), wl.getAuthor().getName(), min);
                         log.info("* time: {} -- {}", wl.getAuthor(), (min > 60) ? ((min / 60) + " h " + (min % 60) + " m") : (min + " m"));
                     }
                 }
@@ -159,7 +165,7 @@ log.info("JSON: {}", result);
                 .key(issue.getKey())
                 .summary(issue.getSummary())
                 .resource(author)
-                .hours(time / 60)
+                .minutes(time)
                 .build();
     }
 }

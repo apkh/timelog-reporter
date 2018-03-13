@@ -36,7 +36,7 @@ public class CsvGridReporter implements TaskReporter {
             writeStatCsv(statistics, writer);
             writer.close();
         } catch (IOException e) {
-            log.error("FATAL ERROR: {} {}", e.getMessage(), e);
+            log.error("FATAL ERROR: {} {}", e.getMessage());
         } finally {
             closeWriter(writer);
         }
@@ -80,16 +80,20 @@ public class CsvGridReporter implements TaskReporter {
             }
             csv.println();
         }
-        writeTasks(csv, timesheet);
+       	writeTasks(csv, timesheet);
     }
     private void writeTasks(CSVPrinter csv, List<ReportableTask> timesheet) throws IOException {
-        for (ReportableTask tasks : timesheet) {
-            writeTask(csv, tasks);
+        for (String user: configuration.getResources()) {
+        	for (ReportableTask task : timesheet) {
+        		if (user.equals(task.getResource())) {
+        			writeTask(csv, task);
+        		}
+        	}
         }
     }
 
-    private void writeTask(CSVPrinter csv, ReportableTask tasks) throws IOException {
-        csv.print(tasks);
+    private void writeTask(CSVPrinter csv, ReportableTask task) throws IOException {
+        csv.print(task);
         csv.println();
     }
 
@@ -98,6 +102,11 @@ public class CsvGridReporter implements TaskReporter {
         for (String user: configuration.getResources()) {
         	csv.print(user);
         	csv.print("");
+        }
+        csv.print("");
+        for (String user: configuration.getResources()) {
+        	csv.print("Hours");
+        	csv.print("Tasks");
         }
         csv.println();
     }

@@ -37,7 +37,7 @@ public class TimesheetGeneratorTest {
 
     @Test
     public void generateTimesheet_givenOneTask_shouldGenerateReport() throws Exception {
-        doReturn(oneIssueFromYesterday("SIMPLE_TASK")).when(jira).getTasks(any(LocalDate.class));
+        doReturn(oneIssueFromYesterday("SIMPLE_TASK")).when(jira).getTasks(any(LocalDate.class), any(LocalDate.class));
         timesheetGenerator.generateTimesheet();
         String csv = readExport();
         Assert.assertTrue(csv.contains("SIMPLE_TASK"));

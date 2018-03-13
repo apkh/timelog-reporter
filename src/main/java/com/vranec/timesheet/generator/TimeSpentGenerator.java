@@ -1,44 +1,39 @@
 package com.vranec.timesheet.generator;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import static java.time.LocalDate.now;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-import com.vranec.jira.gateway.WorkloadMap;
-
-import java.time.LocalDate;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import static java.time.LocalDate.now;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class TimeSpentGenerator {
     private final Configuration configuration;
-    private final Exporter exporter;
     private final TaskSource taskSource;
     private final TaskReporter reporter;
 
-    static HashSet resourcesSet = new HashSet(Arrays.asList(new String[]{"p.bogatyrev", "f.frolov", "d.sychugov"}));
-
     public void generateTimesheet() throws Exception {
+    	// TODO Rework to specified date
         val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
-        log.info("START TIMESHEET GENERATION SINCE {}", startDate);
-        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate);
-        val timesheet = filterTasksByResourceNames(tasks, resourcesSet);
+        val endDate = startDate.plusDays(startDate.lengthOfMonth());
+        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
+        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
+        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
         reporter.report(timesheet, taskSource.getStatistics());
         //exporter.export(timesheet);
         log.info("TIMESHEET GENERATED SUCCESSFULLY");
     }
 
 
-    private List<ReportableTask> filterTasksByResourceNames(Iterable<ReportableTask> tasks, Set<String> resources) {
+    private List<ReportableTask> filterTasksByResourceNames(Iterable<ReportableTask> tasks, Collection<String> resources) {
         List<ReportableTask> result = new ArrayList<>();
 
         tasks.forEach(task -> {

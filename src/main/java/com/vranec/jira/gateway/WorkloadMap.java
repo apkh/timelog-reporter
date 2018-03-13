@@ -15,12 +15,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class WorkloadMap {
 	private Map<Integer, Map<String, Map<String, Float>>> wlMap;
+	private Map<String, String> taskSummaryMap;
 
 	public WorkloadMap() {
-		this.wlMap = new HashMap<Integer, Map<String, Map<String, Float>>>();
+		wlMap = new HashMap<Integer, Map<String, Map<String, Float>>>();
+		taskSummaryMap = new HashMap<String, String>();
 	}
 
-	public void addWl(Date taskDate, String taskKey, String userName, int minutes) {
+	public void addWl(Date taskDate, String taskKey, String summary, String userName, int minutes) {
 		int date = new DateTime(taskDate).getDayOfMonth();
 		Map<String, Map<String, Float>> dateWl = wlMap.get(date);
 		if (dateWl == null) {
@@ -33,6 +35,7 @@ public class WorkloadMap {
 			dateWl.put(userName, userWl);
 		}
 		userWl.put(taskKey, (float)minutes / 60);
+		taskSummaryMap.put(taskKey, summary);
 	}
 
 	public List<Integer> getDates() {
