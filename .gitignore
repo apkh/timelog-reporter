@@ -1,0 +1,12 @@
+.project
+.classpath
+.gradle/*
+.settings/*
+build/*
+*properties
+`
+/.gradle/
+/build/
+/bin/
+export.csv
+log.txt
