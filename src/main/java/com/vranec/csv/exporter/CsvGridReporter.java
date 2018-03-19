@@ -5,16 +5,11 @@ import com.vranec.timesheet.generator.Configuration;
 import com.vranec.timesheet.generator.ReportableTask;
 import com.vranec.timesheet.generator.TaskReporter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -28,29 +23,37 @@ public class CsvGridReporter implements TaskReporter {
     @Autowired
     private Configuration configuration;
 
+	private GridExporter exporter;
+
      private void saveToCsv(List<ReportableTask> timesheet, Map<String, Integer> statistics) {
-        Writer writer = null;
         try {
-            writer = new OutputStreamWriter(new FileOutputStream("export.csv"), "UTF-8");//new FileWriter("export.csv");
-            writeCsv(timesheet, writer);
-            writeStatCsv(statistics, writer);
-            writer.close();
+            exporter = new ExcelGridExporter();
+            writeCsv(timesheet);
+            writeStatCsv(statistics);
         } catch (IOException e) {
             log.error("FATAL ERROR: {} {}", e.getMessage());
         } finally {
-            closeWriter(writer);
+            try {
+				exporter.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
         }
     }
 
-    private void writeStatCsv(Map<String, Integer> statistics, Writer writer) throws IOException {
-        CSVPrinter csv = createCsvPrinter(writer);
+    private void writeStatCsv(Map<String, Integer> statistics) throws IOException {
+    	exporter.createSheet("Statistics");
+    	exporter.setStyle(GridExporter.STYLE_HEADER);
+    	exporter.print("User");
+    	exporter.print("Time");
+    	exporter.setStyle(GridExporter.STYLE_BODY);
+        exporter.println();
         for (String author: statistics.keySet()) {
             log.info("STAT: {} --> {}", author, statistics.get(author));
-            csv.print(author);
-            csv.print(((float)statistics.get(author))/60);
-            csv.println();
+            exporter.print(author);
+            exporter.print(((float)statistics.get(author))/60);
+            exporter.println();
         }
-        csv.close();
 
     }
 /**
@@ -62,12 +65,13 @@ public class CsvGridReporter implements TaskReporter {
  * @param writer
  * @throws IOException
  */
-    private void writeCsv(List<ReportableTask> timesheet, Writer writer) throws IOException {
+    private void writeCsv(List<ReportableTask> timesheet) throws IOException {
     	log.info("Saving to CSV...");
-        CSVPrinter csv = createCsvPrinter(writer);
-        printCsvHeader(csv);
+        printCsvHeader();
         for (Integer date: wlMap.getDates()) {
-        	csv.print(date);
+        	exporter.setStyle(GridExporter.STYLE_HIGHLIGHT);
+        	exporter.print(date);
+        	exporter.setStyle(GridExporter.STYLE_BODY);
 
             for (String user: configuration.getResources()) {
             	Map<String, Float> tasks = wlMap.getTasks(date, user);
@@ -75,59 +79,63 @@ public class CsvGridReporter implements TaskReporter {
             	for (String task: tasks.keySet()) {
             		sum += tasks.get(task);
             	}
-            	csv.print(sum == 0.0 ? "" : sum);
-            	csv.print(String.join(",", tasks.keySet()));
+            	exporter.print(sum == 0.0 ? "" : sum);
+            	exporter.print(String.join(",", tasks.keySet()));
             }
-            csv.println();
+            exporter.println();
         }
-       	writeTasks(csv, timesheet);
+       	writeTasks(timesheet);
     }
-    private void writeTasks(CSVPrinter csv, List<ReportableTask> timesheet) throws IOException {
+    private void writeTasks(List<ReportableTask> timesheet) throws IOException { 
+    	exporter.createSheet("Tasks");
+    	exporter.setStyle(GridExporter.STYLE_HEADER);
+    	exporter.print("Task");
+    	exporter.setStyle(GridExporter.STYLE_BODY);
+        exporter.println();
+
         for (String user: configuration.getResources()) {
         	for (ReportableTask task : timesheet) {
         		if (user.equals(task.getResource())) {
-        			writeTask(csv, task);
+        			writeTask(task);
         		}
         	}
         }
     }
 
-    private void writeTask(CSVPrinter csv, ReportableTask task) throws IOException {
-        csv.print(task);
-        csv.println();
+    private void writeTask(ReportableTask task) throws IOException {
+        exporter.print(task.getKey());
+        exporter.print(task.getSummary());
+        exporter.print(task.getMinutes());
+        exporter.print(task.getResource());
+        exporter.println();
     }
 
-    private void printCsvHeader(CSVPrinter csv) throws IOException {
-        csv.print("Date");
+    private void printCsvHeader() throws IOException {
+    	exporter.createSheet("Timesheet");
+    	exporter.setStyle(GridExporter.STYLE_HEADER);
+    	exporter.print("Date");
         for (String user: configuration.getResources()) {
-        	csv.print(user);
-        	csv.print("");
+        	exporter.print(user);
+        	exporter.print("");
         }
-        csv.print("");
-        for (String user: configuration.getResources()) {
-        	csv.print("Hours");
-        	csv.print("Tasks");
+        exporter.println();
+    	exporter.print("");
+    	for (@SuppressWarnings("unused") String user: configuration.getResources()) {
+        	exporter.print("Hours");
+        	exporter.print("Tasks");
         }
-        csv.println();
+        exporter.println();
+    	exporter.setStyle(GridExporter.STYLE_BODY);
+
     }
 
-    private CSVPrinter createCsvPrinter(Writer writer) throws IOException {
-        return new CSVPrinter(writer, CSVFormat.EXCEL.withDelimiter(','));
-    }
 
-    private void closeWriter(Writer writer) {
-        if (writer == null) {
-            return;
-        }
-        try {
-            writer.close();
-        } catch (IOException ignored) {
-        }
-    }
 
     @Override
     public void report(List<ReportableTask> timesheet, Map<String, Integer> statistics) {
         saveToCsv(timesheet, statistics);
         log.info("timesheet: {}", timesheet);
     }
+
+
 }
