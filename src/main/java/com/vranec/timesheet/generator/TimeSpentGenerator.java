@@ -21,15 +21,19 @@ public class TimeSpentGenerator {
     private final TaskReporter reporter;
 
     public void generateTimesheet() throws Exception {
-    	// TODO Rework to specified date
-        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
-        val endDate = startDate.plusDays(startDate.lengthOfMonth());
-        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
-        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
-        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
-        reporter.report(timesheet, taskSource.getStatistics());
-        //exporter.export(timesheet);
-        log.info("TIMESHEET GENERATED SUCCESSFULLY");
+    	try {
+	    	// TODO Rework to specified date
+	        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
+	        val endDate = startDate.plusDays(startDate.lengthOfMonth());
+	        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
+	        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
+	        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
+	        reporter.report(timesheet, taskSource.getStatistics());
+	        //exporter.export(timesheet);
+	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
+    	} catch (Exception e) {
+    		log.error(e.getMessage());
+    	}
     }
 
 
