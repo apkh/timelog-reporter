@@ -107,10 +107,11 @@ log.info("JSON: {}", result);
         startDate = Date.from(localStartDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         endDate = Date.from(localEndDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
         String qlAssignee = String.join(", ", configuration.getResources());
-        String jql = "project = LK18 AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) +
+        String qlProject = String.join(", ", configuration.getProjects());
+        String jql = "project in (" + qlProject + ")" +
+        		" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) +
         		//" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localEndDate) +
-        		"' and assignee in (" + 
-        		qlAssignee + ")";
+        		"' and assignee in (" + qlAssignee + ")";
         log.info("Searching for issues by JQL: " + jql + "...");
         Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
         processIssues(result);

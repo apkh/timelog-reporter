@@ -105,7 +105,7 @@ public class CsvGridReporter implements TaskReporter {
     private void writeTask(ReportableTask task) throws IOException {
         exporter.print(task.getKey());
         exporter.print(task.getSummary());
-        exporter.print(task.getMinutes());
+        exporter.print((float)task.getMinutes() / 60.0);
         exporter.print(task.getResource());
         exporter.println();
     }

@@ -30,6 +30,8 @@ public class ConfigurationFromPropertiesFile implements Configuration {
     private String jiraPassword;
     @Value("${jira.resources:}")
     private String jiraResources;
+    @Value("${jira.projects:}")
+    private String jiraProjects;
     @Value("${month.detection.subtract.days:15}")
     private int monthDetectionSubtractDays;
     @Value("${ignore.invalid.server.certificate:false}")
@@ -54,6 +56,10 @@ public class ConfigurationFromPropertiesFile implements Configuration {
     
     public List getResources() {
     	return new ArrayList<String>(Arrays.asList(jiraResources.split(",")));
+
+    }    
+    public List getProjects() {
+    	return new ArrayList<String>(Arrays.asList(jiraProjects.split(",")));
 
     }
 }

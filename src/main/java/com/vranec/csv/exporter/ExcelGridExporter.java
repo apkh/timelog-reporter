@@ -3,6 +3,8 @@ package com.vranec.csv.exporter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Date;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -33,7 +35,13 @@ public class ExcelGridExporter implements GridExporter {
 	public void close() throws IOException {
         File currDir = new File(".");
         String path = currDir.getAbsolutePath();
-        String fileLocation = path.substring(0, path.length() - 1) + "temp.xlsx";
+        Date d = new Date();
+        String fileLocation = path.substring(0, path.length() - 1) 
+        		+ d.getDay() + "-"
+        		+ d.getMonth() + "-"
+        		+ d.getHours() + "-"
+        		+ d.getMinutes() 
+        		+ "_temp.xlsx";
         System.out.println("Generate " + fileLocation);
         FileOutputStream outputStream = new FileOutputStream(fileLocation);
         try {
