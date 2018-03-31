@@ -32,6 +32,10 @@ public class ConfigurationFromPropertiesFile implements Configuration {
     private String jiraResources;
     @Value("${jira.projects:}")
     private String jiraProjects;
+    @Value("${jira.supervisor:}")
+    private String supervisorName;
+    @Value("${jira.minimumWlTime:5}")
+    private int minimumWlTime;
     @Value("${month.detection.subtract.days:15}")
     private int monthDetectionSubtractDays;
     @Value("${ignore.invalid.server.certificate:false}")

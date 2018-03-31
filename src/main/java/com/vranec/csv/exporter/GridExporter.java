@@ -10,7 +10,7 @@ public interface GridExporter {
 
 	void close() throws IOException;
 
-	void print(Object obj) throws IOException;
+	void print(String str) throws IOException;
 
 	void println() throws IOException;
 
@@ -18,4 +18,5 @@ public interface GridExporter {
 
 	void setStyle(int styleHeader);
 
+	void printNumber(double value);
 }

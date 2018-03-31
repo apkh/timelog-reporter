@@ -1,14 +1,12 @@
 package com.vranec.csv.exporter;
 
-import java.io.FileNotFoundException;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 
 public class CVSGridExporter implements GridExporter {
 
@@ -29,7 +27,7 @@ public class CVSGridExporter implements GridExporter {
 	}
 	
 	@Override
-	public void print(Object obj) throws IOException {
+	public void print(String obj) throws IOException {
 		cvsPrinter.print(obj);
 		
 	}
@@ -51,6 +49,14 @@ public class CVSGridExporter implements GridExporter {
 	public void setStyle(int styleHeader) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void printNumber(double value) {
+		try {
+			print(String.format("%.1f", (float)value));
+		} catch (IOException e) {
+		}
 	}
 
 }

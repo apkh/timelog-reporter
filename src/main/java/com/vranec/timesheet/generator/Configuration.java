@@ -8,4 +8,8 @@ public interface Configuration {
     String getJiraUsername();
     List<String> getResources();
     List<String> getProjects();
+
+    String getSupervisorName();
+
+    int getMinimumWlTime();
 }

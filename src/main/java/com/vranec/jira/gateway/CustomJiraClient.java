@@ -67,27 +67,29 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
             if (maxResults != null) {
                 queryParams.put("maxResults", String.valueOf(maxResults));
             }
-            queryParams.put("fields", "summary,comment");
+            queryParams.put("fields", "summary,comment,assignee");
             if (expand != null) {
                 queryParams.put("expand", expand);
             }
 
-            URI searchUri = getRestClient().buildURI(Resource.getBaseUri() + "search", queryParams);
-            result = getRestClient().get(searchUri);
-        } catch (IOException ex) {
-            log.error("Cannot connect to JIRA server {}", ex.getMessage());
-            return null;
+//            URI searchUri = getRestClient().buildURI(Resource.getBaseUri() + "search", queryParams);
+//            result = getRestClient().get(searchUri);
+//        } catch (IOException ex) {
+//            log.error("Cannot connect to JIRA server {}", ex.getMessage());
+//            return null;
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
 
+/*
         if (!(result instanceof JSONObject)) {
             throw new IllegalStateException("JSON payload is malformed");
         }
 log.info("JSON: {}", result);
+*/
 
         try {
-            Issue.SearchResult sr = new Issue.SearchResult(getRestClient(), jql, "summary,comment", expand, maxResults, 0 );
+            Issue.SearchResult sr = new Issue.SearchResult(getRestClient(), jql, "summary,comment,assignee", expand, maxResults, 0 );
 /*
             Map map = (Map) result;
 
@@ -109,9 +111,9 @@ log.info("JSON: {}", result);
         String qlAssignee = String.join(", ", configuration.getResources());
         String qlProject = String.join(", ", configuration.getProjects());
         String jql = "project in (" + qlProject + ")" +
-        		" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) +
+        		" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) + "'";
         		//" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localEndDate) +
-        		"' and assignee in (" + qlAssignee + ")";
+        		//"' and assignee in (" + qlAssignee + ")";
         log.info("Searching for issues by JQL: " + jql + "...");
         Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
         processIssues(result);
@@ -139,9 +141,13 @@ log.info("JSON: {}", result);
                     if (!wl.getStarted().before(startDate) &&
                     		!wl.getStarted().after(endDate)) {
                         int min = wl.getTimeSpentSeconds() / 60;
-                        addTimeToIndex(timeMap, wl.getAuthor().getName(), min);
-                        workloadMap.addWl(wl.getStarted(), issue.getKey(), issue.getSummary(), wl.getAuthor().getName(), min);
-                        log.info("* time: {} -- {}", wl.getAuthor(), (min > 60) ? ((min / 60) + " h " + (min % 60) + " m") : (min + " m"));
+
+                        if (min >= configuration.getMinimumWlTime()) {
+                            String userName = getUserName(issue, wl);
+                            addTimeToIndex(timeMap, userName, min);
+                            workloadMap.addWl(wl.getStarted(), issue.getKey(), issue.getSummary(), userName, min);
+                            log.info("* time: {} -- {}", wl.getAuthor(), (min > 60) ? ((min / 60) + " h " + (min % 60) + " m") : (min + " m"));
+                        }
                     }
                 }
             } catch (JiraException e) {
@@ -152,6 +158,21 @@ log.info("JSON: {}", result);
                 addTimeToIndex(statistics, author, timeMap.get(author));
             }
         }
+    }
+
+    private String getUserName(Issue issue, WorkLog wl) {
+        String issueUserName = issue.getAssignee() == null ? null : issue.getAssignee().getName();
+        String wlUserName = wl.getAuthor().getName();
+        // Belongs supervisor iff both WL and Issue assigned to them or
+        // WL -> resource; Issue -> * ==>> resource
+        // WL -> *; Issue -> resource
+        // WL != SV || Issue == null ==> User = wl.user
+        // WL == SV && Issue != null ==> User = issue.user
+
+        return wlUserName.equals(configuration.getSupervisorName()) && !issueUserName.equals(null)
+                ? issueUserName
+                : wlUserName;
+
     }
 
     private static void addTimeToIndex(HashMap<String, Integer> map, String index, Integer integer) {

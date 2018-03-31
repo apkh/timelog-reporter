@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Slf4j
@@ -51,26 +52,28 @@ public class CsvGridReporter implements TaskReporter {
         for (String author: statistics.keySet()) {
             log.info("STAT: {} --> {}", author, statistics.get(author));
             exporter.print(author);
-            exporter.print(((float)statistics.get(author))/60);
+            double value = ((float) statistics.get(author)) / 60;
+            printDouble(value);
             exporter.println();
         }
 
     }
-/**
- * Prints
- * Date,User1,,User2,,User3
- * 1.01.2001,8,LK-102;LK-103;
- * 2.02.....
- * @param timesheet
- * @param writer
- * @throws IOException
- */
+
+    private void printDouble(double value) throws IOException {
+        exporter.printNumber(value);
+    }
+
+    /**
+     *
+     * @param timesheet
+     * @throws IOException
+     */
     private void writeCsv(List<ReportableTask> timesheet) throws IOException {
     	log.info("Saving to CSV...");
         printCsvHeader();
         for (Integer date: wlMap.getDates()) {
         	exporter.setStyle(GridExporter.STYLE_HIGHLIGHT);
-        	exporter.print(date);
+        	exporter.print(date.toString());
         	exporter.setStyle(GridExporter.STYLE_BODY);
 
             for (String user: configuration.getResources()) {
@@ -79,7 +82,7 @@ public class CsvGridReporter implements TaskReporter {
             	for (String task: tasks.keySet()) {
             		sum += tasks.get(task);
             	}
-            	exporter.print(sum == 0.0 ? "" : sum);
+            	printDouble(sum);
             	exporter.print(String.join(",", tasks.keySet()));
             }
             exporter.println();
@@ -105,7 +108,7 @@ public class CsvGridReporter implements TaskReporter {
     private void writeTask(ReportableTask task) throws IOException {
         exporter.print(task.getKey());
         exporter.print(task.getSummary());
-        exporter.print((float)task.getMinutes() / 60.0);
+        printDouble((float)task.getMinutes() / 60.0);
         exporter.print(task.getResource());
         exporter.println();
     }
