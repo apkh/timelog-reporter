@@ -18,9 +18,11 @@ public class ExcelGridExporter implements GridExporter {
 	private Row currentRow;
 	private CellStyle currentStyle;
 	private int columnIndex;
-	
-	public ExcelGridExporter() throws IOException {
+    private final DataFormat format;
+
+    public ExcelGridExporter() throws IOException {
         workbook = new XSSFWorkbook();
+        format = workbook.createDataFormat();
         initStyles();
 	}
 
@@ -61,8 +63,10 @@ public class ExcelGridExporter implements GridExporter {
         if (value != 0.0) {
             cell.setCellValue(formatDouble(value));
         }
+        currentStyle.setDataFormat(format.getFormat("###.##"));
         cell.setCellStyle(currentStyle);
 //        cell.setCellType(CellType.NUMERIC);
+
 
     }
 

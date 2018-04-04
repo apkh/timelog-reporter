@@ -50,28 +50,4 @@ public class TimeSpentGenerator {
         return result;
     }
 
-    /*private List<TasksForDay> parseTimesheetFrom(LocalDate startDate) {
-        Iterable<Task> tasks = taskSource.getTasks(startDate);
-        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
-        if (endDate.isAfter(now())) {
-            endDate = now();
-        }
-        List<TasksForDay> tasksForDays = new ArrayList<>();
-        ConcurrentMap<LocalDate, TasksForDay> timesheet = new ConcurrentHashMap<>();
-        for (LocalDate date = startDate; date.isBefore(endDate); date = date.plusDays(1)) {
-            TasksForDay tasksForDay = new TasksForDay(date);
-            tasksForDays.add(tasksForDay);
-            timesheet.putIfAbsent(date, tasksForDay);
-        }
-
-        tasks.forEach(task -> {
-            log.info("Parsing {}", task.getName());
-            if (task.getAuthor().equals(configuration.getJiraUsername().split("@")[0])) {
-                if (timesheet.containsKey(task.getDate())) {
-                    timesheet.get(task.getDate()).addTask(task.getName());
-                }
-            }
-        });
-        return tasksForDays;
-    }*/
 }
