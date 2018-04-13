@@ -8,6 +8,7 @@ import lombok.Getter;
 public class ReportableTask {
     private String key;
     private String summary;
+    private String status;
     private Integer minutes;
     private String resource;
 

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 @Slf4j
@@ -110,6 +109,7 @@ public class CsvGridReporter implements TaskReporter {
         exporter.print(task.getSummary());
         printDouble((float)task.getMinutes() / 60.0);
         exporter.print(task.getResource());
+        exporter.print(task.getStatus());
         exporter.println();
     }
 
