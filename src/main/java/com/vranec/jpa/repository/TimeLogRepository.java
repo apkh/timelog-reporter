@@ -1,7 +1,7 @@
-package com.vranec.jpa;
+package com.vranec.jpa.repository;
 
+import com.vranec.jpa.model.TimeLog;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 public interface TimeLogRepository extends JpaRepository<TimeLog, Long> {
 

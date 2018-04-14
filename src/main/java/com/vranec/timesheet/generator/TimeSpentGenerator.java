@@ -4,13 +4,12 @@ import static java.time.LocalDate.now;
 
 import java.util.*;
 
-import com.vranec.jpa.TimeLog;
-import com.vranec.jpa.TimeLogRepository;
+import com.vranec.jpa.model.TimeLog;
+import com.vranec.jpa.repository.TimeLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -44,11 +43,11 @@ public class TimeSpentGenerator {
     }
 
     private void selfTest() {
-        timeLogRepo.saveAndFlush(new TimeLog(1l, 4, new Date()));
-//                TimeLog.builder()
-//            .reportTime(new Random().nextInt(100) + 30)
-//            .date(new Date())
-//            .build());
+        timeLogRepo.saveAndFlush(
+                TimeLog.builder()
+                .reportTime(new Random().nextInt(100) + 30)
+                .date(new Date())
+                .build());
     }
 
 

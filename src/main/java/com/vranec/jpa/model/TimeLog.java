@@ -1,4 +1,4 @@
-package com.vranec.jpa;
+package com.vranec.jpa.model;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.util.Date;
 import javax.persistence.*;
 
-//@Builder
+@Builder
 @Entity
 @Table(name = "TimeLog")
 public class TimeLog {
@@ -15,13 +15,13 @@ public class TimeLog {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-//    @Getter
-//    @Setter
+    @Getter
+    @Setter
     @Column(name="report_time")
     private int reportTime;
 
-//    @Getter
-//    @Setter
+    @Getter
+    @Setter
     @Column(name="date")
     private Date date;
 
