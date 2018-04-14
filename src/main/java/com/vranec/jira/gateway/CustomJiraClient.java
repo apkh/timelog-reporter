@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.vranec.jpa.model.TimeLog;
+import com.vranec.jpa.repository.TimeLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.vranec.timesheet.generator.Configuration;
@@ -43,6 +45,8 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
     
     @Autowired
     private Configuration configuration;
+    @Autowired
+    private TimeLogRepository timeLogRepo;
 
     CustomJiraClient(String uri, ICredentials creds) throws JiraException {
         super(uri, creds);
@@ -94,6 +98,8 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
             return;
         }
 
+        timeLogRepo.deleteAll();
+
         for (Issue issue : result.issues) {
             List<WorkLog> allWorkLogs = null;
             HashMap<String, Integer> timeMap = new HashMap<>();
@@ -110,6 +116,10 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
                             addTimeToIndex(timeMap, userName, minutes);
                             workloadMap.addWl(wl.getStarted(), issue.getKey(), issue.getSummary(), userName, minutes);
                             log.info("* time: {} -- {}", wl.getAuthor(), (minutes > 60) ? ((minutes / 60) + " h " + (minutes % 60) + " m") : (minutes + " m"));
+                            timeLogRepo.save(TimeLog.builder()
+                                    .reportTime(wl.getTimeSpentSeconds() / 60)
+                                    .date(wl.getStarted())
+                                    .build());
                         }
                     }
                 }

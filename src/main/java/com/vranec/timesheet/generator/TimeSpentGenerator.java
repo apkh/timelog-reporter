@@ -6,6 +6,7 @@ import java.util.*;
 
 import com.vranec.jpa.model.TimeLog;
 import com.vranec.jpa.repository.TimeLogRepository;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,21 +26,20 @@ public class TimeSpentGenerator {
 
     public void generateTimesheet() throws Exception {
         selfTest();
-        return;
-//    	try {
-//	    	// TODO Rework to specified date
-//	        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
-//	        val endDate = startDate.plusDays(startDate.lengthOfMonth());
-//	        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
-//	        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
-//	        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
-//	        reporter.report(timesheet, taskSource.getStatistics());
-//	        //exporter.export(timesheet);
-//	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
-//    	} catch (Exception e) {
-//    		log.error("Unexpected exception caught {}", e);
-//    		throw new IllegalStateException(e);
-//    	}
+    	try {
+	    	// TODO Rework to specified date
+	        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
+	        val endDate = startDate.plusDays(startDate.lengthOfMonth());
+	        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
+	        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
+	        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
+	        reporter.report(timesheet, taskSource.getStatistics());
+	        //exporter.export(timesheet);
+	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
+    	} catch (Exception e) {
+    		log.error("Unexpected exception caught {}", e);
+    		throw new IllegalStateException(e);
+    	}
     }
 
     private void selfTest() {
