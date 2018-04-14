@@ -59,45 +59,8 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
         JSON result;
 
         try {
-            Map<String, String> queryParams = new HashMap<String, String>() {
-                {
-                    put("jql", j);
-                }
-            };
-            if (maxResults != null) {
-                queryParams.put("maxResults", String.valueOf(maxResults));
-            }
-            queryParams.put("fields", "summary,comment,assignee");
-            if (expand != null) {
-                queryParams.put("expand", expand);
-            }
-
-//            URI searchUri = getRestClient().buildURI(Resource.getBaseUri() + "search", queryParams);
-//            result = getRestClient().get(searchUri);
-//        } catch (IOException ex) {
-//            log.error("Cannot connect to JIRA server {}", ex.getMessage());
-//            return null;
-        } catch (Exception e) {
-            throw new IllegalStateException(e.getMessage());
-        }
-
-/*
-        if (!(result instanceof JSONObject)) {
-            throw new IllegalStateException("JSON payload is malformed");
-        }
-log.info("JSON: {}", result);
-*/
-
-        try {
-            Issue.SearchResult sr = new Issue.SearchResult(getRestClient(), jql, "summary,comment,assignee", expand, maxResults, 0 );
-/*
-            Map map = (Map) result;
-
-            sr.start = Field.getInteger(map.get("startAt"));
-            sr.max = Field.getInteger(map.get("maxResults"));
-            sr.total = Field.getInteger(map.get("total"));
-            sr.issues = Field.getResourceArray(Issue.class, map.get("issues"), getRestClient());
-*/
+            Issue.SearchResult sr = new Issue.SearchResult(getRestClient(), jql,
+                    "summary,comment,assignee,status", expand, maxResults, 0 );
 
             return sr;
         } catch (JiraException e) {
@@ -140,13 +103,13 @@ log.info("JSON: {}", result);
                 for (WorkLog wl : allWorkLogs) {
                     if (!wl.getStarted().before(startDate) &&
                     		!wl.getStarted().after(endDate)) {
-                        int min = wl.getTimeSpentSeconds() / 60;
+                        int minutes = wl.getTimeSpentSeconds() / 60;
 
-                        if (min >= configuration.getMinimumWlTime()) {
+                        if (minutes >= configuration.getMinimumWlTime()) {
                             String userName = getUserName(issue, wl);
-                            addTimeToIndex(timeMap, userName, min);
-                            workloadMap.addWl(wl.getStarted(), issue.getKey(), issue.getSummary(), userName, min);
-                            log.info("* time: {} -- {}", wl.getAuthor(), (min > 60) ? ((min / 60) + " h " + (min % 60) + " m") : (min + " m"));
+                            addTimeToIndex(timeMap, userName, minutes);
+                            workloadMap.addWl(wl.getStarted(), issue.getKey(), issue.getSummary(), userName, minutes);
+                            log.info("* time: {} -- {}", wl.getAuthor(), (minutes > 60) ? ((minutes / 60) + " h " + (minutes % 60) + " m") : (minutes + " m"));
                         }
                     }
                 }
@@ -188,6 +151,7 @@ log.info("JSON: {}", result);
         return ReportableTask.builder()
                 .key(issue.getKey())
                 .summary(issue.getSummary())
+                .status(issue.getStatus().getName())
                 .resource(author)
                 .minutes(time)
                 .build();

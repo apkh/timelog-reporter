@@ -32,7 +32,7 @@ public class TimeSpentGenerator {
 	        //exporter.export(timesheet);
 	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
     	} catch (Exception e) {
-    		log.error(e.getMessage());
+    		log.error("Unexpected exception caught {}", e);
     	}
     }
 
