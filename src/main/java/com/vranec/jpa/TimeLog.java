@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.util.Date;
 import javax.persistence.*;
 
-@Builder
+//@Builder
 @Entity
 @Table(name = "TimeLog")
 public class TimeLog {
@@ -15,20 +15,26 @@ public class TimeLog {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Getter
-    @Setter
+//    @Getter
+//    @Setter
     @Column(name="report_time")
-    private Date reporTime;
+    private int reportTime;
+
+//    @Getter
+//    @Setter
+    @Column(name="date")
+    private Date date;
 
     public TimeLog() {
     }
 
-    public TimeLog(Long id, Date reporTime) {
-        this.reporTime = reporTime;
+    public TimeLog(Long id, int reportTime, Date reportDate) {
+        this.reportTime = reportTime;
+        this.date = reportDate;
     }
 
     @Override
     public String toString() {
-        return "id: " + id + " time: " + reporTime;
+        return "id: " + id + " time: " + reportTime;
     }
 }

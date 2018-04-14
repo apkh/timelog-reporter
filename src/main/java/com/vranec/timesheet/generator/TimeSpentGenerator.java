@@ -2,15 +2,17 @@ package com.vranec.timesheet.generator;
 
 import static java.time.LocalDate.now;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
+import com.vranec.jpa.TimeLog;
+import com.vranec.jpa.TimeLogRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -19,21 +21,34 @@ public class TimeSpentGenerator {
     private final Configuration configuration;
     private final TaskSource taskSource;
     private final TaskReporter reporter;
+    @Autowired
+    private TimeLogRepository timeLogRepo;
 
     public void generateTimesheet() throws Exception {
-    	try {
-	    	// TODO Rework to specified date
-	        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
-	        val endDate = startDate.plusDays(startDate.lengthOfMonth());
-	        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
-	        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
-	        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
-	        reporter.report(timesheet, taskSource.getStatistics());
-	        //exporter.export(timesheet);
-	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
-    	} catch (Exception e) {
-    		log.error("Unexpected exception caught {}", e);
-    	}
+        selfTest();
+        return;
+//    	try {
+//	    	// TODO Rework to specified date
+//	        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
+//	        val endDate = startDate.plusDays(startDate.lengthOfMonth());
+//	        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
+//	        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
+//	        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
+//	        reporter.report(timesheet, taskSource.getStatistics());
+//	        //exporter.export(timesheet);
+//	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
+//    	} catch (Exception e) {
+//    		log.error("Unexpected exception caught {}", e);
+//    		throw new IllegalStateException(e);
+//    	}
+    }
+
+    private void selfTest() {
+        timeLogRepo.saveAndFlush(new TimeLog(1l, 4, new Date()));
+//                TimeLog.builder()
+//            .reportTime(new Random().nextInt(100) + 30)
+//            .date(new Date())
+//            .build());
     }
 
 
