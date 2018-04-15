@@ -1,5 +1,6 @@
 package com.vranec.jpa.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,34 +18,31 @@ public class TimeLog {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Getter
-    @Setter
     @Column(name="report_time")
     private int reportTime;
 
-    @Getter
-    @Setter
     @Column(name="report_date")
     private Date date;
 
-    @Getter
-    @Setter
-    @Column(name="month_day")
-    private int day;
-
-    @Getter
-    @Setter
     @Column(name="resource")
     private String resource;
+
+    @ManyToOne
+    private IssueModel issue;
+
+    @Column(name="month_day")
+    private int day;
 
     public TimeLog() {
     }
 
-    public TimeLog(Long id, int reportTime, Date reportDate, int unused, String resource) {
+    @Builder
+    public TimeLog(Long id, int reportTime, Date reportDate, String resource, IssueModel issue, int unused) {
         this.reportTime = reportTime;
         this.date = reportDate;
         this.day = new DateTime(date).getDayOfMonth();
         this.resource = resource;
+        this.issue = issue;
     }
 
     @Override

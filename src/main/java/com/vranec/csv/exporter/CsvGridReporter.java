@@ -1,6 +1,5 @@
 package com.vranec.csv.exporter;
 
-import com.vranec.jira.gateway.WorkloadMap;
 import com.vranec.jpa.repository.IssuesRepository;
 import com.vranec.jpa.repository.TimeLogRepository;
 import com.vranec.timesheet.generator.Configuration;
@@ -19,9 +18,7 @@ import java.util.Map;
 @Component
 @Primary
 public class CsvGridReporter implements TaskReporter {
-    @Autowired
-    WorkloadMap wlMap;
-    
+
     @Autowired
     private Configuration configuration;
 
@@ -85,13 +82,9 @@ public class CsvGridReporter implements TaskReporter {
 
             for (String user: configuration.getResources()) {
                 Integer workload = timeLogRepo.getWorkload(user, date);
-                Map<String, Float> tasks = wlMap.getTasks(date, user);
-            	float sum = 0;
-            	for (String task: tasks.keySet()) {
-            		sum += tasks.get(task);
-            	}
-            	printDouble(sum);
-            	exporter.print(String.join(",", tasks.keySet()));
+                List<String> issues = timeLogRepo.getIssues(user, date);
+            	printDouble(((workload == null) ? 0 : workload) / 60.0);
+            	exporter.print(String.join(",", issues));
             }
             exporter.println();
         }
@@ -103,6 +96,8 @@ public class CsvGridReporter implements TaskReporter {
     	exporter.print("Task");
     	exporter.setStyle(GridExporter.STYLE_BODY);
         exporter.println();
+
+        
 
         for (String user: configuration.getResources()) {
         	for (ReportableTask task : timesheet) {

@@ -1,5 +1,6 @@
 package com.vranec.jpa.repository;
 
+import com.vranec.jpa.model.IssueModel;
 import com.vranec.jpa.model.TimeLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,5 +14,8 @@ public interface TimeLogRepository extends JpaRepository<TimeLog, Long> {
 
     @Query("SELECT sum(tl.reportTime) FROM TimeLog tl where tl.resource=:user and tl.day=:date")
     Integer getWorkload(String user, Integer date);
+
+    @Query("SELECT tl.issue.issueId FROM TimeLog tl where tl.resource=:user and tl.day=:date")
+    List<String> getIssues(String user, Integer date);
 }
 

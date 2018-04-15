@@ -42,10 +42,7 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
     private HashMap<String, Integer> statistics;
     private Date startDate;
     private Date endDate;
-    // Date -> User -> {task, time}*
-    @Autowired
-    private WorkloadMap workloadMap; 
-    
+
     @Autowired
     private Configuration configuration;
     @Autowired
@@ -88,9 +85,9 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
         		//"' and assignee in (" + qlAssignee + ")";
         reportableTasks = new ArrayList<>();
 
-//        log.info("Searching for issues by JQL: " + jql + "...");
-//        Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
-//        processIssues(result);
+        log.info("Searching for issues by JQL: " + jql + "...");
+        Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
+        processIssues(result);
         return reportableTasks;
     }
 
@@ -108,13 +105,14 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
         issuesRepo.deleteAll();
 
         for (Issue issue : result.issues) {
-            issuesRepo.save(IssueModel.builder()
+            IssueModel persistingIssue = IssueModel.builder()
                     .issueId(issue.getKey())
                     .assignee(issue.getAssignee() == null
                             ? ""
                             : issue.getAssignee().getName())
                     .updateDate(issue.getUpdatedDate())
-                    .build());
+                    .build();
+            issuesRepo.save(persistingIssue);
             List<WorkLog> allWorkLogs = null;
             HashMap<String, Integer> timeMap = new HashMap<>();
             try {
@@ -128,12 +126,12 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
                         if (minutes >= configuration.getMinimumWlTime()) {
                             String userName = getUserName(issue, wl);
                             addTimeToIndex(timeMap, userName, minutes);
-                            workloadMap.addWl(wl.getStarted(), issue.getKey(), issue.getSummary(), userName, minutes);
                             log.info("* time: {} -- {}", wl.getAuthor(), (minutes > 60) ? ((minutes / 60) + " h " + (minutes % 60) + " m") : (minutes + " m"));
                             timeLogRepo.save(TimeLog.builder()
                                     .reportTime(wl.getTimeSpentSeconds() / 60)
                                     .date(wl.getStarted())
                                     .resource(userName)
+                                    .issue(persistingIssue)
                                     .build());
                         }
                     }
