@@ -10,9 +10,9 @@ public interface GridExporter {
 
 	void close() throws IOException;
 
-	void print(String str) throws IOException;
+	void print(String str);
 
-	void println() throws IOException;
+	void println();
 
 	void createSheet(String string);
 

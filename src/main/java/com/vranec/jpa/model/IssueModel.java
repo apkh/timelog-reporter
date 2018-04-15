@@ -16,27 +16,34 @@ public class IssueModel {
     private Long id;
 
     @Getter
-    @Setter
     @Column(name = "issue_id")
     private String issueId;
 
     @Getter
-    @Setter
     @Column(name = "update_date")
     private Date updateDate;
 
     @Getter
-    @Setter
     @Column(name = "assignee")
     private String assignee;
+
+    @Getter
+    @Column(name = "summary")
+    private String summary;
+
+    @Getter
+    @Column(name = "status")
+    private String status;
 
     public IssueModel() {
     }
 
-    public IssueModel(Long id, String issueId, Date updateDate, String assignee) {
+    public IssueModel(Long id, String issueId, Date updateDate, String assignee, String summary, String status) {
         this.issueId = issueId;
         this.updateDate = updateDate;
         this.assignee = assignee;
+        this.summary = summary;
+        this.status = status;
     }
 
     @Override

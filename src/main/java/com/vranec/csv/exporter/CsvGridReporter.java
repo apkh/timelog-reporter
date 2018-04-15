@@ -1,9 +1,9 @@
 package com.vranec.csv.exporter;
 
+import com.vranec.jpa.model.IssueModel;
 import com.vranec.jpa.repository.IssuesRepository;
 import com.vranec.jpa.repository.TimeLogRepository;
 import com.vranec.timesheet.generator.Configuration;
-import com.vranec.timesheet.generator.ReportableTask;
 import com.vranec.timesheet.generator.TaskReporter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -30,11 +29,11 @@ public class CsvGridReporter implements TaskReporter {
 
     private GridExporter exporter;
 
-     private void saveToCsv(List<ReportableTask> timesheet, Map<String, Integer> statistics) {
+     private void saveToCsv() {
         try {
             exporter = new ExcelGridExporter();
-            writeCsv(timesheet);
-            writeStatCsv(statistics);
+            writeCsv();
+            writeStatCsv();
         } catch (IOException e) {
             log.error("FATAL ERROR: {} {}", e.getMessage());
         } finally {
@@ -46,33 +45,36 @@ public class CsvGridReporter implements TaskReporter {
         }
     }
 
-    private void writeStatCsv(Map<String, Integer> statistics) throws IOException {
+    private void writeStatCsv() throws IOException {
     	exporter.createSheet("Statistics");
     	exporter.setStyle(GridExporter.STYLE_HEADER);
     	exporter.print("User");
     	exporter.print("Time");
     	exporter.setStyle(GridExporter.STYLE_BODY);
         exporter.println();
-        for (String author: statistics.keySet()) {
-            log.info("STAT: {} --> {}", author, statistics.get(author));
-            exporter.print(author);
-            double value = ((float) statistics.get(author)) / 60;
-            printDouble(value);
-            exporter.println();
-        }
 
+        timeLogRepo.getStatisticsByResource().forEach(stat -> printStat(stat));
     }
 
-    private void printDouble(double value) throws IOException {
+    private void printStat(Object[] stat) {
+        String author = (String)stat[0];
+        Long time = (Long)stat[1];
+        log.info("STAT: {} --> {}", author, time);
+        exporter.print(author);
+        double value = ((float) time) / 60;
+        printDouble(value);
+        exporter.println();
+    }
+
+    private void printDouble(double value) {
         exporter.printNumber(value);
     }
 
     /**
      *
-     * @param timesheet
      * @throws IOException
      */
-    private void writeCsv(List<ReportableTask> timesheet) throws IOException {
+    private void writeCsv() throws IOException {
     	log.info("Saving to CSV...");
         printCsvHeader();
         for (Integer date: timeLogRepo.allDays()) {
@@ -88,32 +90,41 @@ public class CsvGridReporter implements TaskReporter {
             }
             exporter.println();
         }
-       	writeTasks(timesheet);
+       	writeTasks();
     }
-    private void writeTasks(List<ReportableTask> timesheet) throws IOException { 
+    private void writeTasks() throws IOException {
     	exporter.createSheet("Tasks");
     	exporter.setStyle(GridExporter.STYLE_HEADER);
     	exporter.print("Task");
     	exporter.setStyle(GridExporter.STYLE_BODY);
         exporter.println();
 
-        
+        timeLogRepo.getTasksWithWorkload().forEach(task -> writeTask(task));
 
-        for (String user: configuration.getResources()) {
-        	for (ReportableTask task : timesheet) {
-        		if (user.equals(task.getResource())) {
-        			writeTask(task);
-        		}
-        	}
-        }
     }
 
-    private void writeTask(ReportableTask task) throws IOException {
-        exporter.print(task.getKey());
-        exporter.print(task.getSummary());
-        printDouble((float)task.getMinutes() / 60.0);
-        exporter.print(task.getResource());
-        exporter.print(task.getStatus());
+    private void writeTask(Object[] task) {
+        if (task.length != 2 || task[0] == null || task[0].getClass() != IssueModel.class
+                || task[1] == null || task[1].getClass() != Long.class) {
+            StringBuilder sb  = new StringBuilder();
+            sb.append("Wrong task definition:\n");
+            if (task == null) {
+                sb.append("-task == null");
+            } else if (task.length != 2) {
+                sb.append("-length == " + task.length);
+            } else {
+                sb.append("[0].class=" + task[0] == null ? null : task[0].getClass());
+                sb.append("[1].class=" + task[1] == null ? null : task[1].getClass());
+            }
+            throw new IllegalStateException(sb.toString());
+        }
+        IssueModel issue = (IssueModel) (task[0]);
+        Long minutes = (Long) (task[1]);
+        exporter.print(issue.getIssueId());
+        exporter.print(issue.getSummary());
+        printDouble(minutes.doubleValue() / 60.0);
+        exporter.print(issue.getAssignee());
+        exporter.print(issue.getStatus());
         exporter.println();
     }
 
@@ -139,9 +150,8 @@ public class CsvGridReporter implements TaskReporter {
 
 
     @Override
-    public void report(List<ReportableTask> timesheet, Map<String, Integer> statistics) {
-        saveToCsv(timesheet, statistics);
-        log.info("timesheet: {}", timesheet);
+    public void report() {
+        saveToCsv();
     }
 
 

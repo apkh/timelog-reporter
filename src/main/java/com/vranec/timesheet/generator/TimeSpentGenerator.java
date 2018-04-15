@@ -24,16 +24,16 @@ public class TimeSpentGenerator {
     @Autowired
     private TimeLogRepository timeLogRepo;
 
-    public void generateTimesheet() throws Exception {
+    public void generateTimesheet() {
         selfTest();
     	try {
 	    	// TODO Rework to specified date
 	        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
 	        val endDate = startDate.plusDays(startDate.lengthOfMonth());
 	        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
-	        Iterable<ReportableTask> tasks = taskSource.getTasks(startDate, endDate);
-	        val timesheet = filterTasksByResourceNames(tasks, configuration.getResources());
-	        reporter.report(timesheet, taskSource.getStatistics());
+	        taskSource.getTasks(startDate, endDate);
+
+	        reporter.report();
 	        //exporter.export(timesheet);
 	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
     	} catch (Exception e) {
@@ -50,18 +50,5 @@ public class TimeSpentGenerator {
                 .build());
     }
 
-
-    private List<ReportableTask> filterTasksByResourceNames(Iterable<ReportableTask> tasks, Collection<String> resources) {
-        List<ReportableTask> result = new ArrayList<>();
-
-        tasks.forEach(task -> {
-            log.info("Parsing {}", task);
-            if (resources.contains(task.getResource())) {
-                result.add(task);
-            }
-        });
-
-        return result;
-    }
 
 }
