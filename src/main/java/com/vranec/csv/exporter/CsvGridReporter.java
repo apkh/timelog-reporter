@@ -1,6 +1,8 @@
 package com.vranec.csv.exporter;
 
 import com.vranec.jira.gateway.WorkloadMap;
+import com.vranec.jpa.repository.IssuesRepository;
+import com.vranec.jpa.repository.TimeLogRepository;
 import com.vranec.timesheet.generator.Configuration;
 import com.vranec.timesheet.generator.ReportableTask;
 import com.vranec.timesheet.generator.TaskReporter;
@@ -23,7 +25,13 @@ public class CsvGridReporter implements TaskReporter {
     @Autowired
     private Configuration configuration;
 
-	private GridExporter exporter;
+    @Autowired
+    private TimeLogRepository timeLogRepo;
+    @Autowired
+    private IssuesRepository issuesRepo;
+
+
+    private GridExporter exporter;
 
      private void saveToCsv(List<ReportableTask> timesheet, Map<String, Integer> statistics) {
         try {
@@ -70,13 +78,14 @@ public class CsvGridReporter implements TaskReporter {
     private void writeCsv(List<ReportableTask> timesheet) throws IOException {
     	log.info("Saving to CSV...");
         printCsvHeader();
-        for (Integer date: wlMap.getDates()) {
+        for (Integer date: timeLogRepo.allDays()) {
         	exporter.setStyle(GridExporter.STYLE_HIGHLIGHT);
         	exporter.print(date.toString());
         	exporter.setStyle(GridExporter.STYLE_BODY);
 
             for (String user: configuration.getResources()) {
-            	Map<String, Float> tasks = wlMap.getTasks(date, user);
+                Integer workload = timeLogRepo.getWorkload(user, date);
+                Map<String, Float> tasks = wlMap.getTasks(date, user);
             	float sum = 0;
             	for (String task: tasks.keySet()) {
             		sum += tasks.get(task);

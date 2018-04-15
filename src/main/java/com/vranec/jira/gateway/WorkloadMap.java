@@ -65,7 +65,7 @@ public class WorkloadMap {
 	public  Map<String, Float> getTasks(Integer date, String user) {
 		Map<String, Map<String, Float>> dateMap = wlMap.get(date);
 		if (dateMap == null) {
-			return null;
+			return Collections.EMPTY_MAP;
 		}
 		Map<String, Float> userMap = dateMap.get(user);
 		if (userMap == null) {

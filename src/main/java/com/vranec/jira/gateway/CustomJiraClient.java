@@ -12,8 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.vranec.jpa.model.IssueModel;
 import com.vranec.jpa.model.TimeLog;
+import com.vranec.jpa.repository.IssuesRepository;
 import com.vranec.jpa.repository.TimeLogRepository;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.vranec.timesheet.generator.Configuration;
@@ -47,6 +50,8 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
     private Configuration configuration;
     @Autowired
     private TimeLogRepository timeLogRepo;
+    @Autowired
+    private IssuesRepository issuesRepo;
 
     CustomJiraClient(String uri, ICredentials creds) throws JiraException {
         super(uri, creds);
@@ -64,7 +69,7 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
 
         try {
             Issue.SearchResult sr = new Issue.SearchResult(getRestClient(), jql,
-                    "summary,comment,assignee,status", expand, maxResults, 0 );
+                    "summary,comment,assignee,status,updated", expand, maxResults, 0 );
 
             return sr;
         } catch (JiraException e) {
@@ -81,9 +86,11 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
         		" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localStartDate) + "'";
         		//" AND updated >= '" + DateTimeFormatter.ofPattern("yyyy-M-d").format(localEndDate) +
         		//"' and assignee in (" + qlAssignee + ")";
-        log.info("Searching for issues by JQL: " + jql + "...");
-        Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
-        processIssues(result);
+        reportableTasks = new ArrayList<>();
+
+//        log.info("Searching for issues by JQL: " + jql + "...");
+//        Issue.SearchResult result = searchIssues(jql, 1000, "changelog");
+//        processIssues(result);
         return reportableTasks;
     }
 
@@ -91,7 +98,6 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
      * We need to create a map <Date, Map<User, Pair<TaskKey, Float>>> 
      */
     private void processIssues(Issue.SearchResult result) {
-        reportableTasks = new ArrayList<>();
         statistics.clear();
 
         if (result == null) {
@@ -99,8 +105,16 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
         }
 
         timeLogRepo.deleteAll();
+        issuesRepo.deleteAll();
 
         for (Issue issue : result.issues) {
+            issuesRepo.save(IssueModel.builder()
+                    .issueId(issue.getKey())
+                    .assignee(issue.getAssignee() == null
+                            ? ""
+                            : issue.getAssignee().getName())
+                    .updateDate(issue.getUpdatedDate())
+                    .build());
             List<WorkLog> allWorkLogs = null;
             HashMap<String, Integer> timeMap = new HashMap<>();
             try {
@@ -119,6 +133,7 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
                             timeLogRepo.save(TimeLog.builder()
                                     .reportTime(wl.getTimeSpentSeconds() / 60)
                                     .date(wl.getStarted())
+                                    .resource(userName)
                                     .build());
                         }
                     }
