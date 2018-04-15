@@ -25,7 +25,6 @@ public class TimeSpentGenerator {
     private TimeLogRepository timeLogRepo;
 
     public void generateTimesheet() {
-        selfTest();
     	try {
 	    	// TODO Rework to specified date
 	        val startDate = now().minusDays(configuration.getMonthDetectionSubtractDays()).withDayOfMonth(1);
@@ -41,14 +40,5 @@ public class TimeSpentGenerator {
     		throw new IllegalStateException(e);
     	}
     }
-
-    private void selfTest() {
-        timeLogRepo.saveAndFlush(
-                TimeLog.builder()
-                .reportTime(new Random().nextInt(100) + 30)
-                .date(new Date())
-                .build());
-    }
-
 
 }

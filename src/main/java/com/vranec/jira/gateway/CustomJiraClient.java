@@ -1,27 +1,20 @@
 package com.vranec.jira.gateway;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
 import com.vranec.jpa.model.IssueModel;
 import com.vranec.jpa.model.TimeLog;
 import com.vranec.jpa.repository.IssuesRepository;
 import com.vranec.jpa.repository.TimeLogRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.vranec.timesheet.generator.Configuration;
 import com.vranec.timesheet.generator.TaskSource;
-
 import lombok.extern.slf4j.Slf4j;
-import net.rcarz.jiraclient.ICredentials;
-import net.rcarz.jiraclient.Issue;
-import net.rcarz.jiraclient.JiraClient;
-import net.rcarz.jiraclient.JiraException;
-import net.rcarz.jiraclient.WorkLog;
+import net.rcarz.jiraclient.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
 
 @Slf4j
 public class CustomJiraClient extends JiraClient implements TaskSource {
@@ -73,10 +66,18 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
         if (result == null) {
             return;
         }
-        timeLogRepo.deleteAll();
-        issuesRepo.deleteAll();
-
+//        timeLogRepo.deleteAll();
+//        issuesRepo.deleteAll();
         for (Issue issue : result.issues) {
+            List<IssueModel> storedIssues = issuesRepo.findByIssueId(issue.getKey());
+            if (!storedIssues.isEmpty()
+                    && issue.getKey().equals(storedIssues.get(0).getIssueId())
+                    && issue.getUpdatedDate().equals(storedIssues.get(0).getUpdateDate())) {
+                log.info(issue.getKey() + " is not changed since last run");
+                continue;
+            }
+            log.info(issue.getKey() + " has changed since last run and shall be synchronized");
+
             IssueModel persistingIssue = IssueModel.builder()
                     .issueId(issue.getKey())
                     .assignee(issue.getAssignee() == null
@@ -87,7 +88,6 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
                     .status(issue.getStatus().getName())
                     .build();
             issuesRepo.save(persistingIssue);
-            HashMap<String, Integer> timeMap = new HashMap<>();
             try {
                 List<WorkLog> allWorkLogs = issue.getAllWorkLogs();
                 log.info("Issue {}", issue.getKey());
