@@ -102,7 +102,7 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
                             log.info("* time: {} -- {}", wl.getAuthor(), (minutes > 60) ? ((minutes / 60) + " h " + (minutes % 60) + " m") : (minutes + " m"));
                             timeLogRepo.save(TimeLog.builder()
                                     .reportTime(wl.getTimeSpentSeconds() / 60)
-                                    .date(wl.getStarted())
+                                    .reportDate(wl.getStarted())
                                     .resource(userName)
                                     .issue(persistingIssue)
                                     .build());

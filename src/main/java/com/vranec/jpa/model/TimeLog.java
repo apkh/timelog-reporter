@@ -1,9 +1,6 @@
 package com.vranec.jpa.model;
 
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
 import org.joda.time.DateTime;
 
 import java.util.Date;
@@ -22,7 +19,7 @@ public class TimeLog {
     private int reportTime;
 
     @Column(name="report_date")
-    private Date date;
+    private Date reportDate;
 
     @Column(name="resource")
     private String resource;
@@ -39,8 +36,8 @@ public class TimeLog {
     @Builder
     public TimeLog(Long id, int reportTime, Date reportDate, String resource, IssueModel issue, int unused) {
         this.reportTime = reportTime;
-        this.date = reportDate;
-        this.day = new DateTime(date).getDayOfMonth();
+        this.reportDate = reportDate;
+        this.day = new DateTime(this.reportDate).getDayOfMonth();
         this.resource = resource;
         this.issue = issue;
     }
