@@ -11,7 +11,7 @@
 	<br>
 	JSTL URL: ${url}
 	<br>
-	Message: ${message}
+	Message: ${tasks}
 </body>
 
 </html>
