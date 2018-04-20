@@ -70,13 +70,23 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
 //        issuesRepo.deleteAll();
         for (Issue issue : result.issues) {
             List<IssueModel> storedIssues = issuesRepo.findByIssueId(issue.getKey());
-            if (!storedIssues.isEmpty()
+            if (storedIssues.size() == 1
                     && issue.getKey().equals(storedIssues.get(0).getIssueId())
                     && issue.getUpdatedDate().equals(storedIssues.get(0).getUpdateDate())) {
                 log.info(issue.getKey() + " is not changed since last run");
                 continue;
             }
             log.info(issue.getKey() + " has changed since last run and shall be synchronized");
+
+            if (storedIssues.size() > 1) {
+                log.error("Issue {} stored multiple ({}) times", issue.getKey(), storedIssues.size());
+            }
+            // delete obsolete entities
+            storedIssues.stream().forEach(delIssue -> {
+                timeLogRepo.deleteByIssue(delIssue);
+                issuesRepo.delete(delIssue);
+            });
+
 
             IssueModel persistingIssue = IssueModel.builder()
                     .issueId(issue.getKey())
@@ -90,7 +100,6 @@ public class CustomJiraClient extends JiraClient implements TaskSource {
             issuesRepo.save(persistingIssue);
             try {
                 List<WorkLog> allWorkLogs = issue.getAllWorkLogs();
-                log.info("Issue {}", issue.getKey());
                 for (WorkLog wl : allWorkLogs) {
                     if (!wl.getStarted().before(startDate) &&
                     		!wl.getStarted().after(endDate)) {

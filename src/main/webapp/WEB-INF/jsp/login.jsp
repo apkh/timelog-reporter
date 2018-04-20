@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 
-<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<html>
 
-<html lang="en">
+<head>
+<title>First Web Application</title>
+</head>
 
 <body>
-	<c:url value="/resources/text.txt" var="url"/>
-	<spring:url value="/resources/text.txt" htmlEscape="true" var="springUrl" />
-	Spring URL: ${springUrl} at ${time}
-	<br>
-	JSTL URL: ${url}
-	<br>
-	Message: ${tasks}
+	<font color="red">${errorMessage}</font>
+	<form method="post">
+		Name : <input type="text" name="name" />
+		Password : <input type="password" name="password" />
+		<input type="submit" />
+	</form>
 </body>
 
 </html>

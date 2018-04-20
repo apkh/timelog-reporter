@@ -31,9 +31,7 @@ public class TimeSpentGenerator {
 	        val endDate = startDate.plusDays(startDate.lengthOfMonth());
 	        log.info("START TIMESHEET GENERATION SINCE {} till {}", startDate, endDate);
 	        taskSource.getTasks(startDate, endDate);
-
 	        reporter.report();
-	        //exporter.export(timesheet);
 	        log.info("TIMESHEET GENERATED SUCCESSFULLY");
     	} catch (Exception e) {
     		log.error("Unexpected exception caught {}", e);

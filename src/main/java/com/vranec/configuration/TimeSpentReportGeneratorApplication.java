@@ -24,6 +24,7 @@ public class TimeSpentReportGeneratorApplication extends SpringBootServletInitia
 
     @PostConstruct
     @Async
+    @Scheduled(fixedRate = 1000 * 600)
     public void main() throws Exception {
         timeSpentGenerator.generateTimesheet();
     }

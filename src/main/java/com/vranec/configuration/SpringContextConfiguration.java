@@ -1,6 +1,6 @@
 package com.vranec.configuration;
 
-import com.vranec.controller.WebController;
+import com.vranec.controller.TasksController;
 import com.vranec.csv.exporter.CsvGridReporter;
 import com.vranec.jira.gateway.CustomJiraClient;
 import com.vranec.timesheet.generator.TimeSpentGenerator;
@@ -15,7 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         ConfigurationFromPropertiesFile.class,
         CustomJiraClient.class,
         CsvGridReporter.class,
-        WebController.class})
+        TasksController.class})
 @EntityScan("com.vranec.jpa.model")
 public class SpringContextConfiguration {
 }

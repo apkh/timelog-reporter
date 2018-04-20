@@ -9,5 +9,6 @@ public class TaskViewModel {
     String key;
     String description;
     String assignee;
+    String status;
     Double workload;
 }
