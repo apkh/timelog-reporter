@@ -37,7 +37,7 @@ public class TasksController {
     private TaskViewModel taskToViewModel(IssueModel issueModel, Long minutes) {
         return TaskViewModel.builder()
                 .description(issueModel.getSummary())
-                .key(issueModel.getIssueId())
+                .id(issueModel.getIssueId())
                 .assignee(issueModel.getAssignee())
                 .status(issueModel.getStatus())
                 .workload(minutes / 60.0)

@@ -6,7 +6,7 @@ import lombok.Getter;
 @Builder
 @Getter
 public class TaskViewModel {
-    String key;
+    String id;
     String description;
     String assignee;
     String status;

@@ -27,13 +27,16 @@
       clipboardCopySelector:"table",
 
       columns:[
-        {title:"Key", field:"key",  sortable:true, width:200},
+        {title:"Key", field:"id",  sortable:true, width:100},
         {title:"Summary", field:"description", sortable:false},
         {title:"Assignee", field:"assignee", sortable:true},
         {title:"Status", field:"status", sortable:true},
         {title:"Workload", field:"workload", sortable:true, sorter:"number"},
-
       ],
+    rowClick:function(e, row){
+        window.location.href = "http://jira.brokerkf.ru/browse/" + row.getIndex()
+    },
+
     });
     $("#example-table").tabulator("setData","http://localhost:8080/tasks-table");
 
