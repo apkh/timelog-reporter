@@ -1,6 +1,7 @@
 package com.vranec.configuration;
 
 
+import com.google.common.collect.ImmutableList;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,76 +11,37 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 
 @Configuration
-@EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+//@EnableWebSecurity
+//@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-
-    @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-//
-//    @Autowired
-//    private CustomUserDetailsService jwtUserDetailsService;
-//
-//    @Autowired
-//    private RestAuthenticationEntryPoint restAuthenticationEntryPoint;
-//
-//    @Bean
-//    @Override
-//    public AuthenticationManager authenticationManagerBean() throws Exception {
-//        return super.authenticationManagerBean();
-//    }
-//
-//    @Autowired
-//    public void configureGlobal( AuthenticationManagerBuilder auth ) throws Exception {
-//        auth.userDetailsService( jwtUserDetailsService )
-//                .passwordEncoder( passwordEncoder() );
-//    }
-//
-//    @Autowired
-//    TokenHelper tokenHelper;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-//        http
-//                .sessionManagement().sessionCreationPolicy( SessionCreationPolicy.STATELESS ).and()
-//                .exceptionHandling().authenticationEntryPoint( restAuthenticationEntryPoint ).and()
-//                .authorizeRequests()
-//                .antMatchers("/auth/**").permitAll()
-//                .anyRequest().authenticated().and()
-//                .addFilterBefore(new TokenAuthenticationFilter(tokenHelper, jwtUserDetailsService), BasicAuthenticationFilter.class);
-        http.authorizeRequests().antMatchers("/**").permitAll();
-        http.csrf().disable();
-        http.headers().frameOptions().disable();
+//        http.csrf().disable();
+        http.cors();
     }
 
-//
-//    @Override
-//    public void configure(WebSecurity web) throws Exception {
-//        // TokenAuthenticationFilter will ignore the below paths
-//        web.ignoring().antMatchers(
-//                HttpMethod.GET,
-//                "/auth/**"
-//        );
-//        web.ignoring().antMatchers(
-//                HttpMethod.GET,
-//                "/",
-//                "/webjars/**",
-//                "/*.html",
-//                "/favicon.ico",
-//                "/**/*.html",
-//                "/**/*.css",
-//                "/**/*.js"
-//        );
-//
-//    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        final CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(ImmutableList.of("*"));
+        configuration.setAllowedMethods(ImmutableList.of("HEAD",
+                "GET", "POST", "PUT", "DELETE", "PATCH"));
+        // setAllowCredentials(true) is important, otherwise:
+        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
+        configuration.setAllowCredentials(true);
+        // setAllowedHeaders is important! Without it, OPTIONS preflight request
+        // will fail with 403 Invalid CORS request
+        configuration.setAllowedHeaders(ImmutableList.of("Authorization", "Cache-Control", "Content-Type"));
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 }
