@@ -33,6 +33,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-csv', version: '1.5'
     compile group: 'net.rcarz', name: 'jira-client', version: '0.6-SNAPSHOT'
     compile group: 'org.springframework.boot', name: 'spring-boot-starter'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-security'
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.16.18'
 
 	compile group: 'org.apache.poi', name: 'poi-ooxml', version: '3.15'
