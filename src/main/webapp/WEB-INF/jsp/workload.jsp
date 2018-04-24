@@ -22,8 +22,13 @@
         contentType : "application/json; charset=utf-8"
     });
 
+    var href = window.location.href;
+    var baseURL = href.substr(0,href.indexOf(window.location.pathname));
+
+
+
 $.ajax({
-  url: "http://localhost:8080/wl-header",
+  url: baseURL + "/wl-header",
   cache: false,
   dataType: "json",
   success: function(header){
@@ -35,7 +40,7 @@ $.ajax({
 
       columns:header,
     });
-    $("#example-table").tabulator("setData","http://localhost:8080/wl-table");
+    $("#example-table").tabulator("setData",baseURL + "/wl-table");
 
     $(window).resize(function(){
       $("#example-table").tabulator("redraw");

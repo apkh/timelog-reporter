@@ -38,13 +38,16 @@
     },
 
     });
-    $("#example-table").tabulator("setData","http://localhost:8080/tasks-table");
+    var href = window.location.href;
+    var baseURL = href.substr(0,href.indexOf(window.location.pathname));
+
+    $("#example-table").tabulator("setData", baseURL + "/tasks-table");
 
     $(window).resize(function(){
       $("#example-table").tabulator("redraw");
     });
 
-console.info("started")
+console.info("started: " + window.location.href )
     </script>
       </body>
 
